@@ -153,6 +153,13 @@
   <ItemGroup>
     <ClCompile Include="ch_04.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ClientInfo.h" />
+    <ClInclude Include="Define.h" />
+    <ClInclude Include="EchoServer.h" />
+    <ClInclude Include="IOCPServer.h" />
+    <ClInclude Include="Packet.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
