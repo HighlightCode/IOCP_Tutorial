@@ -8,32 +8,32 @@
 #include <thread>
 #include <mutex>
 
+
+/*-------------------
+*	  Echo Server
+--------------------*/
 class EchoServer : public IOCPServer
 {
-
 public:
-
 	EchoServer() = default;
-
 	virtual ~EchoServer() = default;
 
-	virtual void OnConnect(const UINT32 clientIndex_) override
+	virtual void OnConnect(const UINT32 ClientIndex_) override
 	{
-		std::cout << "Client connected : " << clientIndex_ << std::endl;
+		std::cout << ClientIndex_ << " Client Connect . " << std::endl;
 	}
 
-	virtual void OnClose(const UINT32 clientIndex_) override
+	virtual void OnClose(const UINT32 ClientIndex_) override
 	{
-		std::cout << "Client closed : " << clientIndex_ << std::endl;
+		std::cout << ClientIndex_ << " Client Closed . " << std::endl;
 	}
 
-	virtual void OnReceive(const UINT32 clientIndex_, const UINT32 size_, char* pData_) override
+	virtual void OnReceive(const UINT32 ClientIndex_, const UINT32 dataSize_, char *pData) override
 	{
-		//pData_[size_] = NULL;
-		//std::cout << "Received from Client : " << clientIndex_ << ", msg : " << pData_ << std::endl;
+		std::cout << ClientIndex_ << "Client Received, data size : " << pData << std::endl;
+
 		PacketData packet;
-		packet.Set(clientIndex_, size_, pData_);
-		std::lock_guard<std::mutex> guard(mLock);
+		packet.Set(ClientIndex_, dataSize_, pData);
 		mPacketDataQueue.push_back(packet);
 	}
 
@@ -47,7 +47,7 @@ public:
 
 	void End()
 	{
-		mIsRunProcessThread = false;
+		mIsRunProcessThread = true;
 
 		if (mProcessThread.joinable())
 		{
@@ -63,15 +63,13 @@ private:
 		while (mIsRunProcessThread)
 		{
 			auto packetData = DequeuePacketData();
-
-			if (packetData.DataSize != 0) 
+			if (packetData.DataSize != 0)
 			{
-				std::cout << "packet data : " << packetData.pPacketData << std::endl;
-				SendMsg(packetData.SessionIdx, packetData.DataSize, packetData.pPacketData);
+				SendMsg(packetData.SessionIndex, packetData.DataSize, packetData.pPacketData);
 			}
 			else
 			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				std::this_thread::sleep_for(std::chrono::microseconds(1));
 			}
 		}
 	}
@@ -81,18 +79,20 @@ private:
 		PacketData packetData;
 
 		std::lock_guard<std::mutex> guard(mLock);
-
-		if (mPacketDataQueue.empty()) {
+		if (mPacketDataQueue.empty()) 
+		{
 			return PacketData();
 		}
 
 		packetData.Set(mPacketDataQueue.front());
+
 		mPacketDataQueue.front().Release();
 		mPacketDataQueue.pop_front();
 
 		return packetData;
 	}
 
+private:
 	bool mIsRunProcessThread = false;
 
 	std::thread mProcessThread;

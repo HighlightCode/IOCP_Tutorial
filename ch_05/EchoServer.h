@@ -8,13 +8,12 @@
 #include <thread>
 #include <mutex>
 
+
 class EchoServer : public IOCPServer
 {
-
 public:
 
 	EchoServer() = default;
-
 	virtual ~EchoServer() = default;
 
 	virtual void OnConnect(const UINT32 clientIndex_) override
@@ -27,10 +26,8 @@ public:
 		std::cout << "Client closed : " << clientIndex_ << std::endl;
 	}
 
-	virtual void OnReceive(const UINT32 clientIndex_, const UINT32 size_, char* pData_) override
+	virtual void OnReceive(const UINT32 clientIndex_, const UINT32 size_, char* pData_)
 	{
-		//pData_[size_] = NULL;
-		//std::cout << "Received from Client : " << clientIndex_ << ", msg : " << pData_ << std::endl;
 		PacketData packet;
 		packet.Set(clientIndex_, size_, pData_);
 		std::lock_guard<std::mutex> guard(mLock);
@@ -58,16 +55,17 @@ public:
 	}
 
 private:
+
 	void ProcessPacket()
 	{
 		while (mIsRunProcessThread)
 		{
 			auto packetData = DequeuePacketData();
 
-			if (packetData.DataSize != 0) 
+			if (packetData.DataSize != 0)
 			{
 				std::cout << "packet data : " << packetData.pPacketData << std::endl;
-				SendMsg(packetData.SessionIdx, packetData.DataSize, packetData.pPacketData);
+				SendMsg(packetData.SessionIndex,packetData.DataSize, packetData.pPacketData);
 			}
 			else
 			{
@@ -81,21 +79,21 @@ private:
 		PacketData packetData;
 
 		std::lock_guard<std::mutex> guard(mLock);
-
-		if (mPacketDataQueue.empty()) {
-			return PacketData();
+		if (mPacketDataQueue.empty())
+		{
+			return packetData;
 		}
 
 		packetData.Set(mPacketDataQueue.front());
 		mPacketDataQueue.front().Release();
 		mPacketDataQueue.pop_front();
-
+		
 		return packetData;
 	}
 
 	bool mIsRunProcessThread = false;
 
-	std::thread mProcessThread;
+	std::thread	mProcessThread;
 
 	std::mutex mLock;
 
